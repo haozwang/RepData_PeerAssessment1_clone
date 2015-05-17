@@ -1,0 +1,278 @@
+---
+title: "Reproducible Research: Peer Assessment 1"
+output: 
+  html_document:
+    keep_md: true
+---
+
+<<<<<<< HEAD
+This is an R Markdown document for the Reproducible Research Peer Assessment 1.
+
+=======
+>>>>>>> 80edf39c3bb508fee88e3394542f967dd3fd3270
+
+## Loading and preprocessing the data
+
+
+<<<<<<< HEAD
+Load the data
+----------------------------------------------------
+
+
+```{r, echo=TRUE}
+
+setwd("~/MOOC/Reproducible Research/Assignment 1")
+#fileURL <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+#download.file(fileURL, "data.zip")
+#unzip("data.zip")
+
+data<-read.csv("activity.csv")
+data$date = as.Date(data$date)
+
+```
+
+
+The date column is converted as dates
+=======
+>>>>>>> 80edf39c3bb508fee88e3394542f967dd3fd3270
+
+## What is mean total number of steps taken per day?
+
+
+<<<<<<< HEAD
+1. Calculate the total number of steps taken per day
+----------------------------------------------------
+
+```{r, echo=TRUE}
+
+library(dplyr)
+
+n_steps_day <- data %>%
+ group_by(date) %>%
+ summarise(
+ steps_taken = sum(steps, na.rm = TRUE)
+ )
+
+head(n_steps_day)
+
+```
+
+
+2. Make a histogram of the total number of steps taken each day
+----------------------------------------------------
+
+
+```{r, echo=TRUE}
+
+library(ggplot2)
+
+g <- ggplot (n_steps_day, aes(steps_taken))
+
+# add layers
+  g + 
+  geom_histogram(binwidth = 1500, colour = "darkgreen", fill = "white") +
+  labs(x = "Steps taken per day") +
+  ggtitle("Histogram of total steps taken each day") +
+  theme(plot.title = element_text(lineheight=.8, face="bold"))
+
+```
+
+3. Calculate and report the mean and median of the total number of steps taken per day
+----------------------------------------------------
+
+```{r, echo=TRUE}
+
+n_steps_day %>%
+ summarise(
+ Mean = mean(steps_taken, na.rm = TRUE),
+ Median = median(steps_taken, na.rm = TRUE)
+ )
+
+```
+=======
+>>>>>>> 80edf39c3bb508fee88e3394542f967dd3fd3270
+
+## What is the average daily activity pattern?
+
+
+<<<<<<< HEAD
+1. Make a time series plot 
+----------------------------------------------------
+
+To answer this question, we'll first construct a series which averages the steps taken across the days for each of the intervals
+
+```{r, echo=TRUE}
+
+n_steps_int <- data %>%
+ group_by(interval) %>%
+ summarise(
+ avg_step = mean(steps, na.rm = TRUE)
+ )
+
+head(n_steps_int)
+
+```
+
+Now we will make a time series plot
+
+```{r, echo=TRUE}
+
+library(ggplot2)
+
+g <- ggplot(n_steps_int, aes(interval, avg_step))
+
+# add layers
+  g + 
+  geom_line(col= "steelblue", size = 0.8) +
+  labs(x = "Interval") +
+  labs(y = "Average number of steps per day") +
+  ggtitle("Steps Taken") +
+  theme(plot.title = element_text(lineheight=.8, face="bold"))
+
+```
+
+2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+----------------------------------------------------
+
+```{r, echo=TRUE}
+
+n_steps_int %>%
+    filter(avg_step == max(avg_step))
+
+```
+=======
+>>>>>>> 80edf39c3bb508fee88e3394542f967dd3fd3270
+
+## Imputing missing values
+
+
+<<<<<<< HEAD
+1. Calculate and report the total number of missing values in the dataset 
+----------------------------------------------------
+
+```{r, echo=TRUE}
+
+colSums(is.na(data))
+
+```
+
+
+2. Devise a strategy for filling in all of the missing values in the dataset.
+-----------------------------------------------------------------------------
+
+We'll use the interval average when steps is missing.
+
+
+3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
+--------------------------------------------------------------------------------------------------
+
+```{r, echo=TRUE}
+
+data_na <- data
+
+for (i in seq_along(data_na$steps)) {
+  if(is.na(data_na$steps[i])) {
+    data_na$steps[i]=n_steps_int$avg_step[match(data_na$interval[i],n_steps_int$interval)]
+  }
+}
+  
+
+```
+
+4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day.
+----------------------------------------------------------------
+
+Making a histogram with the new dataset:
+
+```{r, echo=TRUE}
+
+library(ggplot2)
+
+n_steps_day2 <- data_na %>%
+ group_by(date) %>%
+ summarise(
+ steps_taken = sum(steps, na.rm = TRUE)
+ )
+
+
+g <- ggplot (n_steps_day2, aes(steps_taken))
+
+# add layers
+  g + 
+  geom_histogram(binwidth = 1500, colour = "darkred", fill = "white") +
+  labs(x = "Steps taken per day") +
+  ggtitle("Histogram of total steps taken each day") +
+  theme(plot.title = element_text(lineheight=.8, face="bold"))
+
+```
+
+The histogram appears more symmetric around the mean once we replace the NAs. The mean and median total number of steps taken per day are:
+
+```{r, echo=TRUE}
+
+n_steps_day2 %>%
+ summarise(
+ Mean = mean(steps_taken, na.rm = TRUE),
+ Median = median(steps_taken, na.rm = TRUE)
+ )
+
+```
+
+Comparing with the previous results when the NAs are simply omitted, both the mean and the median number of steps increase.
+
+
+
+## Are there differences in activity patterns between weekdays and weekends?
+
+
+1. Create a new factor variable in the dataset with two levels - "weekday" and "weekend".
+-------------------------------------------------------------------------------------
+
+```{r, echo=TRUE}
+
+weekday <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
+
+data$WD <- factor((weekdays(data$date) %in% weekday)+1L, levels=1:2, labels=c('weekend','weekday'))
+                
+
+```
+
+2. Make a panel plot containing a time series plot averaged across all weekday days or weekend days (y-axis). 
+---------------------------------------------------------------------------------------
+
+We'll first average the data across the Weekdays/Weekends
+```{r, echo=TRUE}
+
+n_steps_int2 <- data %>%
+ group_by(interval,WD) %>%
+ summarise(
+ avg_step = mean(steps, na.rm = TRUE)
+ )
+
+
+```
+
+Now we will make a time series plot
+
+```{r, echo=TRUE}
+
+library(ggplot2)
+
+g <- ggplot(n_steps_int2, aes(interval, avg_step))
+
+# add layers
+  g + 
+  geom_line(col= "steelblue", size = 0.8) +
+  facet_wrap(~WD) +
+  labs(x = "Interval") +
+  labs(y = "Average number of steps") +
+  ggtitle("Steps Taken") +
+  theme(plot.title = element_text(lineheight=.8, face="bold"))
+
+```
+
+
+=======
+
+## Are there differences in activity patterns between weekdays and weekends?
+>>>>>>> 80edf39c3bb508fee88e3394542f967dd3fd3270
